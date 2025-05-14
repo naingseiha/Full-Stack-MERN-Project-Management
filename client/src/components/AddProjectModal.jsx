@@ -3,7 +3,7 @@ import { FaList } from "react-icons/fa";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT } from "../mutations/projectMutation";
 import { GET_PROJECTS } from "../queries/projectQueries";
-import { GET_CLIENT } from "../queries/clientQueries";
+import { GET_CLIENTS } from "../queries/clientQueries";
 
 function AddProjecttModal() {
   const [name, setName] = useState("");
@@ -12,7 +12,7 @@ function AddProjecttModal() {
   const [status, setStatus] = useState("new");
 
   // GET_CLIENT query to get the list of clients
-  const { loading, error, data } = useQuery(GET_CLIENT);
+  const { loading, error, data } = useQuery(GET_CLIENTS);
 
   const [addProject] = useMutation(ADD_PROJECT, {
     variables: { name, description, clientId, status },

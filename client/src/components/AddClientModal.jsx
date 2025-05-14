@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { useMutation } from "@apollo/client";
 import { ADD_CLIENT } from "../mutations/clientMutation";
-import { GET_CLIENT } from "../queries/clientQueries";
+import { GET_CLIENTS } from "../queries/clientQueries";
 
 function AddClientModal() {
   const [name, setName] = useState("");
@@ -12,9 +12,9 @@ function AddClientModal() {
   const [addClient] = useMutation(ADD_CLIENT, {
     variables: { name, email, phone },
     update(cache, { data: { addClient } }) {
-      const { clients } = cache.readQuery({ query: GET_CLIENT });
+      const { clients } = cache.readQuery({ query: GET_CLIENTS });
       cache.writeQuery({
-        query: GET_CLIENT,
+        query: GET_CLIENTS,
         data: { clients: [...clients, addClient] },
       });
     },
