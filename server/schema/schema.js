@@ -101,7 +101,13 @@ const mutation = new GraphQLObjectType({
         Project.find({ clientId: args.id }).then((projects) => {
           if (projects.length > 0) {
             projects.forEach((project) => {
-              project.remove();
+              Project.findByIdAndDelete(project._id)
+                .then(() => {
+                  console.log(`Project ${project.name} deleted`);
+                })
+                .catch((err) => {
+                  console.error(`Error deleting project: ${err}`);
+                });
             });
           }
           console.log("Client deleted successfully");
