@@ -2,61 +2,69 @@ import { Link } from "react-router-dom";
 import { FaEye, FaCalendarAlt, FaUser } from "react-icons/fa";
 
 export default function ProjectCard({ project }) {
-  // Get status class
   const getStatusClass = (status) => {
     switch (status) {
       case "In Progress":
-        return "status-in-progress";
+        return "badge-in-progress";
       case "Completed":
-        return "status-completed";
+        return "badge-completed";
       default:
-        return "status-not-started";
+        return "badge-not-started";
     }
   };
 
-  // Format date or display placeholder if invalid
   const formatDate = (dateString) => {
-    if (!dateString) return "No date available";
+    if (!dateString) return "No date";
 
     try {
       const date = new Date(parseInt(dateString));
-      return date.toLocaleDateString();
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
     } catch (error) {
-      return "Invalid Date";
+      return "Invalid date";
     }
   };
 
   return (
-    <div className="col-md-6 col-lg-4 mb-4">
-      <div className="card project-card">
-        <div className="project-header">
-          <h5>{project.name}</h5>
-          <span className={`status-badge ${getStatusClass(project.status)}`}>
+    <div className="card project-card">
+      <div className="project-card-header">
+        <div className="d-flex justify-content-between align-items-start mb-2">
+          <h5 className="project-card-title">{project.name}</h5>
+          <span className={`badge ${getStatusClass(project.status)}`}>
             {project.status}
           </span>
         </div>
+      </div>
 
-        <div className="description">{project.description}</div>
+      <div className="project-card-body">
+        <p className="project-card-description">
+          {project.description.length > 100
+            ? `${project.description.substring(0, 100)}...`
+            : project.description}
+        </p>
 
-        <div className="date-display">
-          <FaCalendarAlt />
-          {formatDate(project.createdAt)}
+        <div className="project-meta">
+          <div className="project-meta-item">
+            <FaCalendarAlt className="project-meta-icon" />
+            {formatDate(project.createdAt)}
+          </div>
+
           {project.client && (
-            <span className="ms-2">
-              <FaUser className="ms-3 me-1" />
+            <div className="project-meta-item">
+              <FaUser className="project-meta-icon" />
               {project.client.name}
-            </span>
+            </div>
           )}
         </div>
+      </div>
 
-        <div className="card-footer">
-          <Link
-            to={`/projects/${project.id}`}
-            className="btn btn-primary view-details-btn"
-          >
-            <FaEye /> View Details
-          </Link>
-        </div>
+      <div className="project-card-footer">
+        <Link to={`/projects/${project.id}`} className="btn btn-primary btn-sm">
+          <FaEye className="me-1" /> View Details
+        </Link>
       </div>
     </div>
   );

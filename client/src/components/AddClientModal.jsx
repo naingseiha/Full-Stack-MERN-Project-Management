@@ -1,130 +1,129 @@
 import { useState } from "react";
-import { FaUser } from "react-icons/fa";
+import { Modal, Button, Form, InputGroup } from "react-bootstrap";
+import { FaUser, FaEnvelope, FaPhone, FaPlus } from "react-icons/fa";
 import { useMutation } from "@apollo/client";
 import { ADD_CLIENT } from "../mutations/clientMutation";
 import { GET_CLIENTS } from "../queries/clientQueries";
+import { toast } from "react-toastify";
 
-function AddClientModal() {
+export default function AddClientModal() {
+  const [show, setShow] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
   const [addClient] = useMutation(ADD_CLIENT, {
     variables: { name, email, phone },
     update(cache, { data: { addClient } }) {
-      const { clients } = cache.readQuery({ query: GET_CLIENTS });
+      const { clients } = cache.readQuery({ query: GET_CLIENTS }) || {
+        clients: [],
+      };
       cache.writeQuery({
         query: GET_CLIENTS,
         data: { clients: [...clients, addClient] },
       });
     },
     onCompleted: () => {
-      setName("");
-      setEmail("");
-      setPhone("");
+      toast.success("Client added successfully");
+      resetForm();
+      handleClose();
     },
     onError: (error) => {
-      console.error("Error adding client:", error);
-      alert("Error adding client. Please try again.");
+      toast.error(`Error adding client: ${error.message}`);
     },
   });
 
-  const onSubmit = (e) => {
-    e.preventDefault();
-    if (!name || !email || !phone) {
-      alert("Please fill in all fields");
-      return;
-    }
-
-    // Call the mutation to add a client
-    addClient(name, email, phone);
-
-    // Clear the form
+  const resetForm = () => {
     setName("");
     setEmail("");
     setPhone("");
   };
 
+  const onSubmit = (e) => {
+    e.preventDefault();
+
+    if (!name || !email || !phone) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    addClient();
+  };
+
   return (
     <>
-      <button
-        type="button"
-        className="btn btn-secondary"
-        data-bs-toggle="modal"
-        data-bs-target="#addClientModal"
-      >
-        <div className="d-flex align-items-center">
-          <FaUser className="icon" />
-          <div>Add Client</div>
-        </div>
-      </button>
+      <Button variant="success" onClick={handleShow}>
+        <FaPlus className="me-2" /> Add Client
+      </Button>
 
-      <div
-        className="modal fade"
-        id="addClientModal"
-        tabindex="-1"
-        aria-labelledby="addClientModalLabel"
-        aria-hidden="true"
+      <Modal
+        show={show}
+        onHide={handleClose}
+        backdrop="static"
+        keyboard={false}
+        centered
       >
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h1 className="modal-title fs-5" id="addClientModal">
-                Add New Client
-              </h1>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
+        <Modal.Header closeButton>
+          <Modal.Title>Add Client</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={onSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FaUser />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Email</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FaEnvelope />
+                </InputGroup.Text>
+                <Form.Control
+                  type="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Phone</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FaPhone />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter phone number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <div className="d-grid gap-2">
+              <Button variant="primary" type="submit">
+                Submit
+              </Button>
             </div>
-            <div className="modal-body">
-              <form action="" onSubmit={onSubmit}>
-                <div className="mb-3">
-                  <label className="form-label">Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Email</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Phone</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </div>
-                <button
-                  className="btn btn-secondary"
-                  type="submit"
-                  data-bs-dismiss="modal"
-                >
-                  Submit
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </>
   );
 }
-
-export default AddClientModal;
