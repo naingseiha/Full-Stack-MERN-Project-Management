@@ -1,6 +1,7 @@
 # Project Management System
 
-![Project Management Dashboard](https://via.placeholder.com/800x400?text=Project+Management+Dashboard)
+![Screenshot 2025-05-15 at 12 25 27 in the afternoon](https://github.com/user-attachments/assets/33c2a919-3c83-4cc2-a581-1189088eabe6)
+
 
 ## Overview
 
