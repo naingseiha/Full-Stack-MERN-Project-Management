@@ -1,164 +1,148 @@
 import { useState } from "react";
-import { FaList } from "react-icons/fa";
+import { Modal, Button, Form, InputGroup } from "react-bootstrap";
+import { FaList, FaPlus } from "react-icons/fa";
 import { useMutation, useQuery } from "@apollo/client";
 import { ADD_PROJECT } from "../mutations/projectMutation";
 import { GET_PROJECTS } from "../queries/projectQueries";
 import { GET_CLIENTS } from "../queries/clientQueries";
+import { toast } from "react-toastify";
+import Spinner from "./Spinner";
 
-function AddProjecttModal() {
+export default function AddProjectModal() {
+  const [show, setShow] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [clientId, setClientId] = useState("");
-  const [status, setStatus] = useState("new");
+  const [status, setStatus] = useState("Not Started");
 
-  // GET_CLIENT query to get the list of clients
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  // Get clients for select
   const { loading, error, data } = useQuery(GET_CLIENTS);
 
   const [addProject] = useMutation(ADD_PROJECT, {
     variables: { name, description, clientId, status },
     update(cache, { data: { addProject } }) {
-      const { projects } = cache.readQuery({ query: GET_PROJECTS });
+      const { projects } = cache.readQuery({ query: GET_PROJECTS }) || {
+        projects: [],
+      };
       cache.writeQuery({
         query: GET_PROJECTS,
         data: { projects: [...projects, addProject] },
       });
     },
     onCompleted: () => {
-      setName("");
-      setDescription("");
-      setClientId("");
-      setStatus("new");
+      toast.success("Project added successfully");
+      resetForm();
+      handleClose();
     },
     onError: (error) => {
-      console.error("Error adding client:", error);
-      alert("Error adding client. Please try again.");
+      toast.error(`Error adding project: ${error.message}`);
     },
   });
 
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setStatus("Not Started");
+    setClientId("");
+  };
+
   const onSubmit = (e) => {
     e.preventDefault();
+
     if (!name || !description || !status) {
-      alert("Please fill in all fields");
+      toast.error("Please fill in all required fields");
       return;
     }
 
-    // Call the mutation to add a client
-    addProject(name, description, clientId, status);
-
-    // Clear the form
-    setName("");
-    setDescription("");
-    setClientId("");
-    setStatus("new");
+    addProject();
   };
 
-  if (loading) return null;
-  if (error) return <p>Something went wrong</p>;
+  if (loading) return <Spinner />;
+  if (error) return <p>Something went wrong loading clients</p>;
 
   return (
     <>
-      {!loading && !error && (
-        <>
-          <button
-            type="button"
-            className="btn btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#addProjectModal"
-          >
-            <div className="d-flex align-items-center">
-              <FaList className="icon" />
-              <div>Add Project</div>
-            </div>
-          </button>
+      <Button variant="primary" onClick={handleShow}>
+        <FaPlus className="me-2" /> New Project
+      </Button>
 
-          <div
-            className="modal fade"
-            id="addProjectModal"
-            tabindex="-1"
-            aria-labelledby="addProjectModalLabel"
-            aria-hidden="true"
-          >
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h1 className="modal-title fs-5" id="addProjectModal">
-                    Add New Project
-                  </h1>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="modal"
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <form action="" onSubmit={onSubmit}>
-                    <div className="mb-3">
-                      <label className="form-label">Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Description</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="description"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Status</label>
-                      <select
-                        className="form-select"
-                        id="status"
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                      >
-                        <option value="new">Not Stared</option>
-                        <option value="progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                      </select>
-                    </div>
+      <Modal
+        show={show}
+        onHide={handleClose}
+        backdrop="static"
+        keyboard={false}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>New Project</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={onSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Name</Form.Label>
+              <InputGroup>
+                <InputGroup.Text>
+                  <FaList />
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  placeholder="Project name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </InputGroup>
+            </Form.Group>
 
-                    <div className="mb-3">
-                      <label className="form-label">Client</label>
-                      <select
-                        className="form-select"
-                        id="clientId"
-                        value={clientId}
-                        onChange={(e) => setClientId(e.target.value)}
-                      >
-                        <option value="">Select Client</option>
-                        {data.clients.map((client) => (
-                          <option key={client.id} value={client.id}>
-                            {client.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <button
-                      className="btn btn-primary"
-                      type="submit"
-                      data-bs-dismiss="modal"
-                    >
-                      Submit
-                    </button>
-                  </form>
-                </div>
-              </div>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="Project description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Status</Form.Label>
+              <Form.Select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="Not Started">Not Started</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Client</Form.Label>
+              <Form.Select
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+              >
+                <option value="">Select Client</option>
+                {data.clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <div className="d-grid gap-2">
+              <Button variant="primary" type="submit">
+                Submit
+              </Button>
             </div>
-          </div>
-        </>
-      )}
+          </Form>
+        </Modal.Body>
+      </Modal>
     </>
   );
 }
-
-export default AddProjecttModal;
